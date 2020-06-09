@@ -121,9 +121,8 @@ namespace UPRProfiler
                     catch (Exception e)
                     {
                         NetworkServer.screenFlag = false;
-                        Debug.LogError("[PACKAGE] Screenshot Error " + e);
+                        Debug.LogErrorFormat("[PACKAGE] Screenshot Error {0}\n{1}", e.Message, e.StackTrace);
                     }
-
                 }
                 Profiler.EndSample();
                 if (NetworkServer.isConnected && !NetworkServer.sendDeviceInfo)
@@ -135,7 +134,7 @@ namespace UPRProfiler
                     }
                     catch (Exception e)
                     {
-                        Debug.LogError("[PACKAGE] Send SystemDevice Error " + e);
+                        Debug.LogErrorFormat("[PACKAGE] Send SystemDevice Error {0}\n{1}", e.Message, e.StackTrace);
                     }
                 }
 
@@ -149,7 +148,6 @@ namespace UPRProfiler
             memoryCnt = 0;
             while (true)
             {
-
                 Profiler.BeginSample("Profiler.GetMemoryInfo");
                 if (NetworkServer.isConnected)
                 {
@@ -159,7 +157,7 @@ namespace UPRProfiler
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogError("[PACKAGE] Send PSS Error " + ex);
+                        Debug.LogErrorFormat("[PACKAGE] Send PSS Error {0}\n{1}", ex.Message, ex.StackTrace);
                     }
 
                     memoryCnt++;
@@ -191,8 +189,8 @@ namespace UPRProfiler
         {
             StringBuilder deviceInfo = new StringBuilder();
             deviceInfo.AppendFormat("{0}:{1}", "systemBrand", SystemInfo.deviceModel);
-            deviceInfo.AppendFormat("& {0}:{1}", "systemTotalRam", SystemInfo.systemMemorySize.ToString() + "MB");
-            deviceInfo.AppendFormat("& {0}:{1}", "systemMaxCpuFreq", SystemInfo.processorFrequency + "MHZ");
+            deviceInfo.AppendFormat("& {0}:{1}MB", "systemTotalRam", SystemInfo.systemMemorySize.ToString());
+            deviceInfo.AppendFormat("& {0}:{1}MHZ", "systemMaxCpuFreq", SystemInfo.processorFrequency);
             deviceInfo.AppendFormat("& {0}:{1}", "packageVersion", packageVersion);
 
             deviceInfo.AppendFormat("& {0}:{1}", "operatingSystem", SystemInfo.operatingSystem);
@@ -208,7 +206,7 @@ namespace UPRProfiler
             deviceInfo.AppendFormat("& {0}:{1}", "maxTextureSize", SystemInfo.maxTextureSize);
             deviceInfo.AppendFormat("& {0}:{1}", "npotSupport", SystemInfo.npotSupport);
             deviceInfo.AppendFormat("& {0}:{1}", "cpuCores", SystemInfo.processorCount);
-            deviceInfo.AppendFormat("& {0}:{1}", "resolution", Screen.width + "*" + Screen.height);
+            deviceInfo.AppendFormat("& {0}:{1}*{2}", "resolution", Screen.width, Screen.height);
             deviceInfo.AppendFormat("& {0}:{1}", "processorType", SystemInfo.processorType);
             NetworkServer.SendMessage(Encoding.ASCII.GetBytes(deviceInfo.ToString()), 2, width, height);
         }
@@ -216,6 +214,11 @@ namespace UPRProfiler
 
         private void CpuThread()
         {
+            cprocess.StartInfo.FileName = "sh";
+            cprocess.StartInfo.Arguments = string.Format("-c top | grep ", pid);
+            cprocess.StartInfo.UseShellExecute = false;
+            cprocess.StartInfo.RedirectStandardOutput = true;
+            cprocess.StartInfo.RedirectStandardError = true;
             while (true)
             {
                 if (NetworkServer.isConnected)
@@ -228,11 +231,7 @@ namespace UPRProfiler
         private static string GetCpuUsage(int pid)
         {
             string result = "";
-            cprocess.StartInfo.FileName = "sh";
-            cprocess.StartInfo.Arguments = "-c top | grep " + pid;
-            cprocess.StartInfo.UseShellExecute = false;
-            cprocess.StartInfo.RedirectStandardOutput = true;
-            cprocess.StartInfo.RedirectStandardError = true;
+            
             try
             {
                 cprocess.Start();
@@ -247,7 +246,7 @@ namespace UPRProfiler
             }
             catch (Exception e)
             {
-                Debug.LogError("Package GetCPUUsage Error " + e);
+                Debug.LogErrorFormat("Package GetCPUUsage Error {0}\n{1}", e.Message, e.StackTrace);
             }
             return result;
         }

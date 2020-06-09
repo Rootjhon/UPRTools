@@ -54,7 +54,7 @@ using OldLuaDLL = UPRLuaProfiler.LuaDLL;
 
 namespace UPRLuaProfiler
 {
-#region 通用结构体
+    #region 通用结构体
 
     public enum LuaGCOptions
     {
@@ -93,7 +93,7 @@ namespace UPRLuaProfiler
 #else
     public delegate int LuaCSFunction(IntPtr luaState);
 #endif
-#endregion
+    #endregion
 
     public class LuaDLL
     {
@@ -113,7 +113,7 @@ namespace UPRLuaProfiler
 
 #endif
 
-#region index
+        #region index
 #if XLUA
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int xlua_getglobal(IntPtr L, string name);
@@ -150,9 +150,9 @@ namespace UPRLuaProfiler
         {
             luaL_unref(luaState, LuaIndexes.LUA_REGISTRYINDEX, reference);
         }
-#endregion
+        #endregion
 
-#region 通用操作
+        #region 通用操作
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr luaL_newstate();
 
@@ -253,8 +253,8 @@ namespace UPRLuaProfiler
             LuaLib.DoString(luaState, env_script);
 #endif
         }
-        
-#region script
+
+        #region script
         const string env_script = @"
 local function getfunction(level)
     local info = debug.getinfo(level + 1, 'f')
@@ -295,7 +295,7 @@ function getfenv(fn)
     end
 end
 ";
-#endregion
+        #endregion
 
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int luaL_ref(IntPtr luaState, int t);                                                  //[-1, +0, m]
@@ -352,9 +352,9 @@ end
             IntPtr fn = Marshal.GetFunctionPointerForDelegate(func);
             lua_pushcclosure(luaState, fn, 0);
         }
-#endregion
+        #endregion
 
-#region mono hook
+        #region mono hook
 
         private static CSharpMethodHooker luaL_newstate_hooker;
         private static CSharpMethodHooker lua_close_hooker;
@@ -431,7 +431,7 @@ end
 #endif
             m_hooked = true;
 #endif
-            }
+        }
 
         public static void UnInstall()
         {
@@ -579,7 +579,7 @@ end
 
         public static int toluaL_ref_proxy(IntPtr L)
         {
-            for (int i = 0, imax = 250;i<imax;i++)
+            for (int i = 0, imax = 250; i < imax; i++)
             {
                 UnityEngine.Debug.Log("fuck misaka");
             }
@@ -606,5 +606,5 @@ end
 
 
     }
-    }
+}
 #endif

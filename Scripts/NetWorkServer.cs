@@ -216,7 +216,7 @@ namespace UPRProfiler
                 }
                 catch (SocketException)
                 {
-                    Debug.LogError("Port not available " + port.ToString());
+                    Debug.LogErrorFormat("Port not available {0}", port.ToString());
                 }
 
             }
@@ -360,7 +360,7 @@ namespace UPRProfiler
             }
             catch (Exception e)
             {
-                Debug.Log("ParseMessage Error " + e);
+                Debug.LogException(e);
             }
             return result;
         }

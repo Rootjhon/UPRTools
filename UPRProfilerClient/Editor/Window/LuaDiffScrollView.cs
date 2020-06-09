@@ -2,11 +2,12 @@
 namespace UPRLuaProfiler
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Text;
     using UnityEditor;
     using UnityEngine;
+    using System.Collections.Generic;
+
     public class LuaDiffScrollView
     {
         private bool m_isStaticRecord = false;
@@ -216,13 +217,13 @@ namespace UPRLuaProfiler
 
         public void MarkIsStaticRecord()
         {
-            m_staticDateTime = "static record:" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            m_staticDateTime = string.Format("static record:{0}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             m_isStaticRecord = true;
         }
 
         public void MarkIsRecord()
         {
-            m_dateTime = "record" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            m_dateTime = string.Format("record:{0}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             m_isRecord = true;
         }
 

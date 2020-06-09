@@ -724,7 +724,6 @@ namespace UPRLuaProfiler
         }
         #endregion
     }
-
 }
 #endif
 

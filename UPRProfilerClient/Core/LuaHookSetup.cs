@@ -53,7 +53,7 @@ namespace UPRLuaProfiler
         public static float power { private set; get; }
 
         public static LuaDeepProfilerSetting setting { private set; get; }
-        
+
         public float showTime = 1f;
         private int count = 0;
         private float deltaTime = 0f;
@@ -168,7 +168,7 @@ namespace UPRLuaProfiler
         }
 #endif
     }
-    
+
     #endregion
 
     public class LuaHook

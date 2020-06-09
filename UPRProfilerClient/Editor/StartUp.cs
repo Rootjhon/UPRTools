@@ -43,6 +43,9 @@ using System.Linq;
 using System.Security.Cryptography;
 using UnityEditor;
 using UnityEngine;
+using System.Reflection;
+
+using MethodBody = UPR.Cecil.Cil.MethodBody;
 
 namespace UPRLuaProfiler
 {
@@ -65,7 +68,7 @@ namespace UPRLuaProfiler
             string[] paths = Directory.GetFiles(Application.dataPath, "*.dll", SearchOption.AllDirectories);
             foreach (var item in paths)
             {
-                string fileName = Path.GetFileName(item);
+                string fileName = Path.GetFileName(item).ToLower();
                 if (fileName == "slua.dll")
                 {
                     AppendMacro("#define SLUA");
@@ -87,7 +90,7 @@ namespace UPRLuaProfiler
             LuaDeepProfilerSetting.Instance.isInited = true;
         }
 
-         private static void AppendMacro(string macro)
+        private static void AppendMacro(string macro)
         {
             System.Diagnostics.StackTrace st = new System.Diagnostics.StackTrace(true);
             System.Diagnostics.StackFrame sf = st.GetFrame(0);
@@ -125,7 +128,7 @@ namespace UPRLuaProfiler
         private static MethodDefinition m_beginSampleMethod;
         private static MethodDefinition m_endSampleMethod;
         //private static bool m_useLuaProfiler = false;
-       
+
         #region try finally
         public static void InjectAllMethods()
         {
@@ -137,7 +140,7 @@ namespace UPRLuaProfiler
 
             var projectPath = System.Reflection.Assembly.Load("Assembly-CSharp").ManifestModule.FullyQualifiedName;
             var profilerPath = (typeof(LuaProfiler).Assembly).ManifestModule.FullyQualifiedName;
-            
+
             InjectAllMethods(projectPath, profilerPath);
         }
 
@@ -242,7 +245,7 @@ namespace UPRLuaProfiler
                         if (isMonoBehaviour)
                         {
                             continue;
-                        } 
+                        }
                     }
 
                     if (item.IsAbstract)
@@ -486,7 +489,8 @@ namespace UPRLuaProfiler
 
         public static void Recompile(bool flag)
         {
-            BuildTargetGroup bg = BuildTargetGroup.Standalone;
+            var bg = (BuildTargetGroup)typeof(EditorUserBuildSettings).GetProperty("activeBuildTargetGroup",
+                BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
             switch (EditorUserBuildSettings.activeBuildTarget)
             {
                 case BuildTarget.Android:

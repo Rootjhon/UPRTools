@@ -6,6 +6,7 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Profiling;
+using System.IO;
 
 namespace UPRProfiler
 {
@@ -18,7 +19,7 @@ namespace UPRProfiler
                 Debug.Log("You need stop play mode or wait compiling finished");
                 return;
             }
-            if (!System.IO.File.Exists(assemblyPath + fileName))
+            if (!File.Exists(assemblyPath + fileName))
             {
                 Debug.Log("This Project didn't contains this dll");
                 return;
@@ -31,7 +32,7 @@ namespace UPRProfiler
 
             if (assembly == null)
             {
-                Debug.LogError("InjectTool Inject Load assembly failed: " + assemblyPath);
+                Debug.LogErrorFormat("InjectTool Inject Load assembly failed: {0}", assemblyPath);
                 return;
             }
 
@@ -39,12 +40,12 @@ namespace UPRProfiler
             {
                 ProcessAssembly(assembly, typeName, methodName);
                 assembly.Write(assemblyPath + fileName, new WriterParameters { WriteSymbols = false });
-                Debug.Log("Listening function " + methodName + " successfully!");
+                Debug.LogFormat("Listening function {0} successfully!", methodName);
             }
             catch (Exception ex)
             {
-                Debug.LogError("InjectTool addProfiler failed: " + ex);
-                throw;
+                Debug.LogException(ex);
+                throw ex;
             }
             finally
             {
@@ -65,53 +66,51 @@ namespace UPRProfiler
             {
                 foreach (var type in module.Types)
                 {
-                    if (type.Name == typeName)
+                    if (type.Name != typeName) continue;
+
+                    foreach (var method in type.Methods)
                     {
-                        foreach (var method in type.Methods)
+                        if ((method.Name == methodName || method.Name == methodName + "Async") && method.HasParameters)
                         {
-                            if ((method.Name == methodName || method.Name == methodName + "Async") && method.HasParameters)
+                            string label = string.Format("upr: {0} {1}: ", methodName, method.Parameters[0]);
+
+                            var beginMethod =
+                                module.ImportReference(typeof(Profiler).GetMethod("BeginSample",
+                                                                                   new[] { typeof(string) }));
+                            var endMethod =
+                                module.ImportReference(typeof(Profiler).GetMethod("EndSample",
+                                                                                   BindingFlags.Static |
+                                                                                   BindingFlags.Public));
+                            var concatMethod = module.ImportReference(typeof(String).GetMethod("Concat", new[] { typeof(string), typeof(string) }));
+
+                            var ilProcessor = method.Body.GetILProcessor();
+                            var first = method.Body.Instructions[0];
+
+                            ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Nop));
+                            ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Ldstr, label));
+
+                            if (methodName == "LoadAsset")
                             {
-
-                                string label = "upr: " + methodName + " " + method.Parameters[0] + ": ";
-
-                                var beginMethod =
-                                    module.ImportReference(typeof(Profiler).GetMethod("BeginSample",
-                                                                                       new[] { typeof(string) }));
-                                var endMethod =
-                                    module.ImportReference(typeof(Profiler).GetMethod("EndSample",
-                                                                                       BindingFlags.Static |
-                                                                                       BindingFlags.Public));
-                                var concatMethod = module.ImportReference(typeof(String).GetMethod("Concat", new[] { typeof(string), typeof(string) }));
-
-                                var ilProcessor = method.Body.GetILProcessor();
-                                var first = method.Body.Instructions[0];
-
-                                ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Nop));
-                                ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Ldstr, label));
-
-                                if (methodName == "LoadAsset")
-                                {
-                                    ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Ldarg_1));
-                                }
-                                else
-                                {
-                                    ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Ldarg_0));
-                                }
-                                if (method.Parameters[0].ParameterType.ToString() != "System.String")
-                                {
-                                    ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Box, method.Parameters[0].ParameterType));
-                                    concatMethod = module.ImportReference(typeof(String).GetMethod("Concat", new[] { typeof(object), typeof(object) }));
-                                }
-
-                                ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Call, concatMethod));
-                                ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Call, beginMethod));
-
-                                var lastCall = Instruction.Create(OpCodes.Call, endMethod);
-
-                                InnerProcess(module, method, lastCall);
-
-                                changed = true;
+                                ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Ldarg_1));
                             }
+                            else
+                            {
+                                ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Ldarg_0));
+                            }
+                            if (method.Parameters[0].ParameterType.ToString() != "System.String")
+                            {
+                                ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Box, method.Parameters[0].ParameterType));
+                                concatMethod = module.ImportReference(typeof(String).GetMethod("Concat", new[] { typeof(object), typeof(object) }));
+                            }
+
+                            ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Call, concatMethod));
+                            ilProcessor.InsertBefore(first, Instruction.Create(OpCodes.Call, beginMethod));
+
+                            var lastCall = Instruction.Create(OpCodes.Call, endMethod);
+
+                            InnerProcess(module, method, lastCall);
+
+                            changed = true;
                         }
                     }
                 }

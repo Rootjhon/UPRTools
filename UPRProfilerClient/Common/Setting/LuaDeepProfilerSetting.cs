@@ -41,6 +41,8 @@ namespace UPRLuaProfiler
     using System.Runtime.InteropServices;
     using System.Text;
     using UnityEngine;
+    using UPRProfiler;
+
     public class LuaDeepProfilerSetting
     {
         public static LuaDeepProfilerSetting MakeInstance()
@@ -271,11 +273,10 @@ namespace UPRLuaProfiler
         public void Save()
         {
 #if UNITY_EDITOR
-            string text = "Assets/Resources/LuaDeepProfilerSettings.bytes";
-
-            if (!Directory.Exists("Assets/Resources"))
+            string text = Path.Combine(UPRToolSetting.ResourcesDir, LuaDeepProfilerSettings);
+            if (!Directory.Exists(UPRToolSetting.ResourcesDir))
             {
-                Directory.CreateDirectory("Assets/Resources");
+                Directory.CreateDirectory(UPRToolSetting.ResourcesDir);
             }
 
             FileStream output = new FileStream(text, FileMode.Create);
@@ -308,7 +309,7 @@ namespace UPRLuaProfiler
             LuaDeepProfilerSetting luaDeepProfilerSetting = new LuaDeepProfilerSetting();
             byte[] datas = null;
 #if UNITY_EDITOR
-            string text = "Assets/Resources/LuaDeepProfilerSettings.bytes";
+            string text = Path.Combine(UPRToolSetting.ResourcesDir, LuaDeepProfilerSettings);
             if (!File.Exists(text))
             {
                 luaDeepProfilerSetting.Save();
@@ -316,14 +317,14 @@ namespace UPRLuaProfiler
             datas = File.ReadAllBytes(text);
 #else
             TextAsset textAsset = null;
-            string path = Application.persistentDataPath + "/LuaDeepProfilerSettings.bytes";
+            string path = Path.Combine(Application.persistentDataPath, LuaDeepProfilerSettings);
             if (File.Exists(path))
             {
                 datas = File.ReadAllBytes(path);
             }
             else
             {
-                textAsset = Resources.Load<TextAsset>("LuaDeepProfilerSettings");
+                textAsset = Resources.Load<TextAsset>(Path.GetFileNameWithoutExtension(LuaDeepProfilerSettings));
                 datas = textAsset != null ? textAsset.bytes : null;
             }
 #endif
@@ -376,7 +377,8 @@ namespace UPRLuaProfiler
             return luaDeepProfilerSetting;
         }
 
-        public const string SettingsAssetName = "LuaDeepProfilerSettings";
+        public const string LuaDeepProfilerSettings = "LuaDeepProfilerSettings.bytes";
+
         private static LuaDeepProfilerSetting instance;
         private bool m_isDeepMonoProfiler = false;
         private bool m_isDeepLuaProfiler = false;
