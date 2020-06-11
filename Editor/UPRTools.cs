@@ -22,16 +22,12 @@ namespace UPRProfiler
 
         private string packageVersion = string.Format("Current Version: {0}", InnerPackageS.packageVersion);
         #endregion
-
-        UPRTools()
-        {
-            this.titleContent = new GUIContent("UPRTools");
-        }
-
-        [MenuItem("Tools/UPRTools")]
+        
+        [MenuItem("Tools/UPRTools/Setting")]
         static void showWindow()
         {
-            EditorWindow.GetWindow(typeof(UPRTools));
+            var tempWindow = EditorWindow.GetWindow<UPRTools>();
+            tempWindow.titleContent = new GUIContent("UPRTools");
         }
 
         private void OnEnable()
@@ -47,7 +43,6 @@ namespace UPRProfiler
 
         private void OnGUI()
         {
-            string version = Application.unityVersion;
             using (new EditorGUILayout.VerticalScope())
             {
                 // draw the title
