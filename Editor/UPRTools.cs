@@ -46,6 +46,8 @@ namespace UPRProfiler
             UPRGUIUtil.GUI_Title("UPRTools", packageVersion);
 
             doPackage();
+
+            UPRGUIUtil.GUI_Bottom(this);
         }
 
         void doPackage()

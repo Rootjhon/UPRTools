@@ -35,4 +35,13 @@ public static class UPRGUIUtil
             GUI.skin.label.alignment = TextAnchor.UpperLeft;
         }
     }
+
+    public static void GUI_Bottom(EditorWindow varWindow)
+    {
+        GUIStyle _creditsStyle = new GUIStyle();
+        _creditsStyle.fontStyle = FontStyle.Italic;
+        _creditsStyle.alignment = TextAnchor.MiddleCenter;
+        _creditsStyle.normal.textColor = new Color(0, 0, 0, 0.5f);
+        GUI.Label(new Rect(15, varWindow.position.height - 22, varWindow.position.width, 22), "Product by JunQiang", _creditsStyle);
+    }
 }
