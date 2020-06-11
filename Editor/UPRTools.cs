@@ -43,26 +43,9 @@ namespace UPRProfiler
 
         private void OnGUI()
         {
-            using (new EditorGUILayout.VerticalScope())
-            {
-                // draw the title
-                GUILayout.Space(10);
-                GUI.skin.label.fontSize = 24;
-                GUI.skin.label.alignment = TextAnchor.MiddleCenter;
-                GUILayout.Label("UPRTools");
+            UPRGUIUtil.GUI_Title("UPRTools", packageVersion);
 
-                // draw the version
-                GUI.skin.label.fontSize = 12;
-                GUI.skin.label.alignment = TextAnchor.LowerCenter;
-                GUILayout.Label(packageVersion);
-
-                //draw the text
-                GUILayout.Space(10);
-                GUI.skin.label.fontSize = 12;
-                GUI.skin.label.alignment = TextAnchor.UpperLeft;
-
-                doPackage();
-            }
+            doPackage();
         }
 
         void doPackage()

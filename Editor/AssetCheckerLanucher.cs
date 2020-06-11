@@ -38,7 +38,7 @@ namespace UPRProfiler
             set
             {
                 _AssetCheckExcuter = value;
-                if (string.IsNullOrEmpty(_AssetCheckExcuter))
+                if (!string.IsNullOrEmpty(_AssetCheckExcuter))
                 {
                     EditorPrefs.SetString(AssetCheckExcuterPrefKey, _AssetCheckExcuter);
                 }
@@ -52,7 +52,7 @@ namespace UPRProfiler
         private void OnProjectChange() { GUI_InitCacheData(); }
         private void OnGUI()
         {
-            GUI_Title();
+            UPRGUIUtil.GUI_Title("AssetCheckerLanucher", __Version);
             EditorGUILayout.Space();
 
             using (new EditorGUILayout.HorizontalScope())
@@ -62,6 +62,8 @@ namespace UPRProfiler
                 {
                     var tempExeVal = EditorUtility.OpenFilePanel("Select Where the AssetChecker is", Application.dataPath, "exe");
                     AssetCheckExcuter = tempExeVal;
+                    this.Repaint();
+                    this.Focus();
                 }
             }
             if (string.IsNullOrEmpty(AssetCheckExcuter))
@@ -69,27 +71,7 @@ namespace UPRProfiler
                 EditorGUILayout.HelpBox("AssetChecker not found.", MessageType.Error);
             }
         }
-        private void GUI_Title()
-        {
-            using (new EditorGUILayout.VerticalScope())
-            {
-                // draw the title
-                GUILayout.Space(10);
-                GUI.skin.label.fontSize = 24;
-                GUI.skin.label.alignment = TextAnchor.MiddleCenter;
-                GUILayout.Label("AssetCheckerLanucher");
-
-                // draw the version
-                GUI.skin.label.fontSize = 12;
-                GUI.skin.label.alignment = TextAnchor.LowerCenter;
-                GUILayout.Label(__Version);
-
-                //draw the text
-                GUILayout.Space(10);
-                GUI.skin.label.fontSize = 12;
-                GUI.skin.label.alignment = TextAnchor.UpperLeft;
-            }
-        }
+        
         private void GUI_InitCacheData()
         {
             AssetCheckExcuter = EditorPrefs.GetString(AssetCheckExcuterPrefKey, string.Empty);
