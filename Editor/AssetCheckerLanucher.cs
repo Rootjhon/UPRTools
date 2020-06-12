@@ -7,18 +7,15 @@
  *
  * @brief           
  */
-using System.Collections;
-using System.Collections.Generic;
+
+using System.IO;
 using UnityEngine;
 using UnityEditor;
-using System.IO;
 using System.Diagnostics;
-
-using Debug = UnityEngine.Debug;
 
 namespace UPRProfiler
 {
-    public class AssetCheckerLanucher : EditorWindow
+    public sealed class AssetCheckerLanucher : EditorWindow
     {
         #region [Menu]
         [MenuItem("Tools/UPRTools/AssetChecker")]
@@ -142,7 +139,5 @@ namespace UPRProfiler
             _UnityPrjPath = Path.GetFullPath(Path.Combine(Application.dataPath, "../"));
         }
         #endregion
-
-
     }
 }
