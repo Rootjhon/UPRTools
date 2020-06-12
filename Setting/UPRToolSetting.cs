@@ -1,11 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using UnityEngine;
+using UPRLuaProfiler;
+using System.Diagnostics;
+
+using Debug = UnityEngine.Debug;
 
 namespace UPRProfiler
 {
-    public class UPRToolSetting
+    public sealed class UPRToolSetting
     {
         #region [Fields]
         public const string ResourcesDir = "Assets/UPRTools/Resources";
@@ -17,15 +19,34 @@ namespace UPRProfiler
         private bool m_instantiate = false;
 
         private bool m_enableLuaProfiler = false;
-        private bool m_enableMonoProfiler = false;
 
         public bool loadScene { get { return m_loadScene; } set { m_loadScene = value; } }
         public bool loadAsset { get { return m_loadAsset; } set { m_loadAsset = value; } }
         public bool loadAssetBundle { get { return m_loadAssetBundle; } set { m_loadAssetBundle = value; } }
         public bool instantiate { get { return m_instantiate; } set { m_instantiate = value; } }
 
-        public bool enableLuaProfiler { get { return m_enableLuaProfiler; } set { m_enableLuaProfiler = value; } }
-        public bool enableMonoProfiler { get { return m_enableMonoProfiler; } set { m_enableMonoProfiler = value; } }
+        public bool enableLuaProfiler
+        {
+            get
+            {
+                return LuaDeepProfilerSetting.Instance.isDeepLuaProfiler;
+            }
+            set
+            {
+                LuaDeepProfilerSetting.Instance.isDeepLuaProfiler = value;
+            }
+        }
+        public bool enableMonoProfiler
+        {
+            get
+            {
+                return LuaDeepProfilerSetting.Instance.isDeepMonoProfiler;
+            }
+            set
+            {
+                LuaDeepProfilerSetting.Instance.isDeepMonoProfiler = value;
+            }
+        }
 
 
         private static UPRToolSetting instance;
@@ -43,6 +64,7 @@ namespace UPRProfiler
         #endregion
 
         #region [API]
+        [Conditional("UNITY_EDITOR")]
         public void Save()
         {
             string tempFilePath = Path.Combine(ResourcesDir, UPRSettingFile);
@@ -55,8 +77,6 @@ namespace UPRProfiler
             {
                 using (var binaryWriter = new BinaryWriter(output))
                 {
-                    binaryWriter.Write(this.m_enableLuaProfiler);
-                    binaryWriter.Write(this.m_enableMonoProfiler);
                     binaryWriter.Write(this.m_loadScene);
                     binaryWriter.Write(this.m_loadAsset);
                     binaryWriter.Write(this.m_loadAssetBundle);
@@ -64,6 +84,7 @@ namespace UPRProfiler
                 }
             }
         }
+
         public UPRToolSetting Load()
         {
             UPRToolSetting uprToolSetting = new UPRToolSetting();
@@ -83,8 +104,6 @@ namespace UPRProfiler
             {
                 using (var binaryReader = new BinaryReader(memoryStream))
                 {
-                    uprToolSetting.m_enableLuaProfiler = binaryReader.ReadBoolean();
-                    uprToolSetting.m_enableMonoProfiler = binaryReader.ReadBoolean();
                     uprToolSetting.m_loadScene = binaryReader.ReadBoolean();
                     uprToolSetting.m_loadAsset = binaryReader.ReadBoolean();
                     uprToolSetting.m_loadAssetBundle = binaryReader.ReadBoolean();

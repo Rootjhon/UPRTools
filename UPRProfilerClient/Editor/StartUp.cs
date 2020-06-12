@@ -55,13 +55,6 @@ namespace UPRLuaProfiler
         //private static int tickNum = 0;
         static StartUp()
         {
-
-            /*
-            if (LuaDeepProfilerSetting.Instance.isDeepMonoProfiler)
-            {
-                InjectMethods.InjectAllMethods();
-            }
-            */
 #if XLUA || TOLUA || SLUA
             if (LuaDeepProfilerSetting.Instance.isInited) return;
 #endif
@@ -489,41 +482,31 @@ namespace UPRLuaProfiler
 
         public static void Recompile(bool flag)
         {
-            var bg = (BuildTargetGroup)typeof(EditorUserBuildSettings).GetProperty("activeBuildTargetGroup",
+            var tempActiveGroup = (BuildTargetGroup)typeof(EditorUserBuildSettings).GetProperty("activeBuildTargetGroup",
                 BindingFlags.NonPublic | BindingFlags.Static).GetValue(null);
-            switch (EditorUserBuildSettings.activeBuildTarget)
-            {
-                case BuildTarget.Android:
-                    bg = BuildTargetGroup.Android;
-                    break;
-                case BuildTarget.iOS:
-                    bg = BuildTargetGroup.iOS;
-                    break;
-            }
-            string path = PlayerSettings.GetScriptingDefineSymbolsForGroup(bg);
 
-            if (flag == path.Contains("MIKU_RECOMPILE"))
-                return;
-
+            string tempMacro = PlayerSettings.GetScriptingDefineSymbolsForGroup(tempActiveGroup);
+            if (flag == tempMacro.Contains("MIKU_RECOMPILE")) return;
+            
             if (flag)
             {
-                path += ";MIKU_RECOMPILE";
+                tempMacro += ";MIKU_RECOMPILE";
             }
             else
             {
-                string[] heads = path.Split(';');
-                path = "";
+                var tempMacroArray = tempMacro.Split(';');
 
-                foreach (var item in heads)
+                tempMacro = string.Empty;
+                foreach (var item in tempMacroArray)
                 {
                     if (item == "MIKU_RECOMPILE")
                     {
                         continue;
                     }
-                    path += item + ";";
+                    tempMacro += item + ";";
                 }
             }
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(bg, path);
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(tempActiveGroup, tempMacro);
         }
 
         public static void Recompile(string label, bool flag)

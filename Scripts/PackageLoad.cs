@@ -2,10 +2,9 @@
 
 namespace UPRProfiler
 {
-    public class PackageLoad : MonoBehaviour
+    public sealed class PackageLoad : MonoBehaviour
     {
-        public static bool useLua = false;
-
+        #region [Entrance]
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         public static void OnStartGame()
         {
@@ -18,6 +17,7 @@ namespace UPRProfiler
             NetworkServer.ConnectTcpPort(56000);
             Debug.Log("[UPRProfiler] PackageLoad OnStartGame");
         }
+        #endregion
     }
 }
 

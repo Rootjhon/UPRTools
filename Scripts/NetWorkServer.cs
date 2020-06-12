@@ -1,17 +1,20 @@
-﻿using UnityEngine;
+﻿using System;
+using System.IO;
+using System.Net;
+using System.Text;
+using UnityEngine;
+using System.Threading;
+using System.Net.Sockets;
+using System.Collections.Generic;
+
+using ThreadPriority = System.Threading.ThreadPriority;
+
 namespace UPRProfiler
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Net;
-    using System.Net.Sockets;
-    using System.Text;
-    using System.Threading;
 #if UNITY_2018_2_OR_NEWER
     using Unity.Collections;
 
-    public class UPRMessage
+    public sealed class UPRMessage
     {
         public int type;
         public NativeArray<byte> nativeRawBytes;
@@ -20,7 +23,7 @@ namespace UPRProfiler
         public int height;
     }
 #else
-    public class UPRMessage
+    public sealed class UPRMessage
     {
         public int type;
         public byte[] rawBytes;
@@ -44,10 +47,11 @@ namespace UPRProfiler
         private static string host = "0.0.0.0";
         private static Thread m_sendThread;
         private static Thread m_receiveThread;
-        private static int screenShotFrequency = 1;
+        
         private static int listenPort = 56000;
         private static byte[] dataType = new byte[2];
         private static JPGEncoder jpegEncoder;
+
         #region public
         public static void ConnectTcpPort(int port)
         {
@@ -59,7 +63,6 @@ namespace UPRProfiler
         private static void StartListening()
         {
             if (m_client != null) return;
-
 
             IPAddress myIP = IPAddress.Parse(host);
             TcpListener tcpListener = new TcpListener(myIP, listenPort);
@@ -102,7 +105,7 @@ namespace UPRProfiler
                 }
                 catch (Exception e)
                 {
-                    Debug.Log("Listening error:" + e);
+                    Debug.LogException(e);
                     Close();
                 }
                 Thread.Sleep(1000);
@@ -140,10 +143,9 @@ namespace UPRProfiler
             }
             catch (Exception e)
             {
-                Debug.Log(e);
+                Debug.LogException(e);
             }
         }
-
 
         public static void SendMessage(UPRMessage sample)
         {
@@ -198,28 +200,29 @@ namespace UPRProfiler
         }
 #endif
         #endregion
+
         private static int GetAvailablePort(int beginPort, int maxIter, string type)
         {
             int availablePort = beginPort;
-            for (int port = beginPort; port < beginPort + maxIter; port++)
+            for (int port = beginPort; port < beginPort + maxIter; ++port)
             {
                 IPEndPoint ep = new IPEndPoint(IPAddress.Any, port);
                 Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
                 try
                 {
+                    //Port available
                     socket.Bind(ep);
                     socket.Close();
                     availablePort = port;
                     break;
-                    //Port available
                 }
                 catch (SocketException)
                 {
-                    Debug.LogErrorFormat("Port not available {0}", port.ToString());
+                    Debug.LogWarningFormat("[NetworkServer] Port not available {0}", port);
                 }
-
             }
+            Debug.LogFormat("[NetworkServer] GetAvailablePort:{0}", availablePort);
             return availablePort;
         }
 
@@ -232,7 +235,7 @@ namespace UPRProfiler
                 {
                     if (m_sendThread == null)
                     {
-                        Debug.Log("<color=#ff0000>Package m_sendThread null</color>");
+                        Debug.Log("[NetworkServer] <color=#ff0000>Package m_sendThread null</color>");
                         return;
                     }
                     if (m_sampleQueue.Count > 0)
@@ -246,23 +249,21 @@ namespace UPRProfiler
                             }
                             switch (s.type)
                             {
-                                case 0:
-
+                                case (int)DataType.Screenshot:
 #if UNITY_2018_2_OR_NEWER
                                     jpegEncoder.doNativeEncoding(s.nativeRawBytes, s.width, s.height);
 #else
                                     jpegEncoder.doEncoding(s.rawBytes, s.width, s.height);
 #endif
-
                                     byte[] image = jpegEncoder.GetBytes();
                                     screenFlag = false;
-                                    PackAndSend(image, (int)DataType.Screenshot);
+                                    PackAndSend(image, s.type);
                                     break;
-                                case 1:
-                                    PackAndSend(s.rawBytes, (int)DataType.PSS);
+                                case (int)DataType.PSS:
+                                    PackAndSend(s.rawBytes, s.type);
                                     break;
-                                case 2:
-                                    PackAndSend(s.rawBytes, (int)DataType.Device);
+                                case (int)DataType.Device:
+                                    PackAndSend(s.rawBytes, s.type);
                                     break;
                             }
                         }
@@ -271,17 +272,16 @@ namespace UPRProfiler
                 }
                 catch (ThreadAbortException e)
                 {
-                    Debug.Log(e);
+                    Debug.LogException(e);
                 }
                 catch (Exception e)
                 {
-                    Debug.Log(e);
+                    Debug.LogException(e);
                     Close();
                 }
             }
 
         }
-
 
         private static void DoReceiveMessage()
         {
@@ -292,7 +292,7 @@ namespace UPRProfiler
                 {
                     if (m_receiveThread == null)
                     {
-                        Debug.Log("<color=#ff0000>Package m_receiveThread null</color>");
+                        Debug.Log("[NetworkServer] <color=#ff0000>Package m_receiveThread null</color>");
                         return;
                     }
                     if (ns.CanRead && ns.DataAvailable)
@@ -317,8 +317,8 @@ namespace UPRProfiler
                             if (sess.Length == 3)
                             {
                                 enableScreenShot = Convert.ToBoolean(sess[1]);
-                                screenShotFrequency = Convert.ToInt32(sess[2]) > 3 ? Convert.ToInt32(sess[2]) : 3;
-                                InnerPackageS.waitOneSeconds = new WaitForSeconds(screenShotFrequency);
+                                var tempSnapSec = Convert.ToInt32(sess[2]);
+                                InnerPackageS.Frequency = tempSnapSec;
                                 jpegEncoder = new JPGEncoder(20);
                             }
                         }
@@ -326,7 +326,7 @@ namespace UPRProfiler
                 }
                 catch (Exception e)
                 {
-                    Debug.Log(e);
+                    Debug.LogException(e);
                 }
                 Thread.Sleep(1000);
             }
@@ -335,7 +335,7 @@ namespace UPRProfiler
         private static string ParseMessage(BinaryReader binaryReader)
         {
             int position = 0;
-            string result = "";
+            string result = string.Empty;
             while (position < MagicTag.Length)
             {
                 byte tmpByte = binaryReader.ReadByte();
