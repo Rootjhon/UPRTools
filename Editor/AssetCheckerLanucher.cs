@@ -113,8 +113,8 @@ namespace UPRProfiler
                 if (GUILayout.Button("Check Project Settings", GUILayout.MaxWidth(150f), GUILayout.MaxHeight(50f)))
                 {
                     var args = string.IsNullOrEmpty(ProjectID) ?
-                        string.Format("--project={0} --projectId={1}", _UnityPrjPath, ProjectID) :
-                        string.Format("--project={0}", _UnityPrjPath);
+                        string.Format("--project={0}", _UnityPrjPath):
+                        string.Format("--project={0} --projectId={1}", _UnityPrjPath, ProjectID);
                     var tempIns = Process.Start(AssetCheckExcuter, args);
                 }
 
