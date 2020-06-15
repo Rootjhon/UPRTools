@@ -52,11 +52,13 @@ namespace UPRProfiler
         private static byte[] dataType = new byte[2];
         private static JPGEncoder jpegEncoder;
 
+        private static Thread listenThead;
+
         #region public
         public static void ConnectTcpPort(int port)
         {
             listenPort = GetAvailablePort(port, 500, "tcp");
-            Thread listenThead = new Thread(new ThreadStart(StartListening));
+            listenThead = new Thread(new ThreadStart(StartListening));
             listenThead.Start();
         }
 
@@ -67,18 +69,15 @@ namespace UPRProfiler
             IPAddress myIP = IPAddress.Parse(host);
             TcpListener tcpListener = new TcpListener(myIP, listenPort);
             tcpListener.Start();
-            //  Debug.LogError("Listening Package IP: " + host + " on port: " + listenPort);
 
             while (true)
             {
-
                 try
                 {
                     m_client = tcpListener.AcceptTcpClient();
 
                     if (m_client != null)
                     {
-                        //  Debug.LogError("<color=#00ff00>Package Connect Success</color>");
                         m_client.Client.SendTimeout = 30000;
 
                         ns = m_client.GetStream();
@@ -103,6 +102,10 @@ namespace UPRProfiler
                     }
 
                 }
+                catch (ThreadAbortException abortEx)
+                {
+                    Debug.LogWarning(abortEx.Message);
+                }
                 catch (Exception e)
                 {
                     Debug.LogException(e);
@@ -111,12 +114,13 @@ namespace UPRProfiler
                 Thread.Sleep(1000);
             }
         }
-        private static void Close()
+        public static void Close()
         {
             try
             {
                 isConnected = false;
                 enableScreenShot = false;
+
                 if (m_client != null)
                 {
                     if (m_client.Connected)
@@ -125,7 +129,18 @@ namespace UPRProfiler
                     }
                     m_client = null;
                 }
-                m_sampleQueue.Clear();
+
+                lock (m_sampleQueue)
+                {
+                    m_sampleQueue.Clear();
+                }
+                
+                if (m_sendThread != null)
+                {
+                    var tmp = m_sendThread;
+                    m_sendThread = null;
+                    tmp.Abort();
+                }
 
                 if (m_receiveThread != null)
                 {
@@ -134,12 +149,13 @@ namespace UPRProfiler
                     tmp.Abort();
                 }
 
-                if (m_sendThread != null)
+                if (listenThead != null)
                 {
-                    var tmp = m_sendThread;
-                    m_sendThread = null;
+                    var tmp = listenThead;
+                    listenThead = null;
                     tmp.Abort();
                 }
+
             }
             catch (Exception e)
             {
@@ -269,10 +285,6 @@ namespace UPRProfiler
                         }
                     }
                     Thread.Sleep(100);
-                }
-                catch (ThreadAbortException e)
-                {
-                    Debug.LogException(e);
                 }
                 catch (Exception e)
                 {

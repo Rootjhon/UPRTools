@@ -49,7 +49,7 @@ namespace UPRProfiler
         #endregion
 
         #region [MonoBehaviour]
-        void Start()
+        private void Start()
         {
             height = Screen.height;
             width = Screen.width;
@@ -63,6 +63,10 @@ namespace UPRProfiler
             {
                 DetectSystemInfo();
             }
+        }
+        private void OnApplicationQuit()
+        {
+            NetworkServer.Close();
         }
         #endregion
 
