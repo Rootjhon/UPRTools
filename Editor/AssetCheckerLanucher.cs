@@ -48,7 +48,7 @@ namespace UPRProfiler
                 }
             }
         }
-        
+
         private string _ProjectID;
         private string ProjectID
         {
@@ -113,7 +113,7 @@ namespace UPRProfiler
                 if (GUILayout.Button("Check Project Settings", GUILayout.MaxWidth(150f), GUILayout.MaxHeight(50f)))
                 {
                     var args = string.IsNullOrEmpty(ProjectID) ?
-                        string.Format("--project={0}", _UnityPrjPath):
+                        string.Format("--project={0}", _UnityPrjPath) :
                         string.Format("--project={0} --projectId={1}", _UnityPrjPath, ProjectID);
                     var tempIns = Process.Start(AssetCheckExcuter, args);
                 }
@@ -121,8 +121,8 @@ namespace UPRProfiler
                 if (GUILayout.Button("Check Assetbundle", GUILayout.MaxWidth(150f), GUILayout.MaxHeight(50f)))
                 {
                     var args = string.IsNullOrEmpty(ProjectID) ?
-                        string.Format("abcheck --project={0} --projectId={1}", _UnityPrjPath, ProjectID) :
-                        string.Format("abcheck --project={0}", _UnityPrjPath);
+                        string.Format("abcheck --project={0}", _UnityPrjPath) :
+                        string.Format("abcheck --project={0} --projectId={1}", _UnityPrjPath, ProjectID);
                     var tempIns = Process.Start(AssetCheckExcuter, args);
                 }
 
