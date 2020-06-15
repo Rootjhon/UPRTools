@@ -58,11 +58,9 @@ namespace UPRProfiler
             rawBytes = new byte[0];
 #endif
             StartCoroutine(GetScreenShot());
-
-            if (Application.platform == RuntimePlatform.Android)
-            {
-                DetectSystemInfo();
-            }
+#if UNITY_ANDROID
+            DetectSystemInfo();
+#endif
         }
         private void OnApplicationQuit()
         {
