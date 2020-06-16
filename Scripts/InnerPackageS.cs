@@ -58,7 +58,9 @@ namespace UPRProfiler
             rawBytes = new byte[0];
 #endif
             StartCoroutine(GetScreenShot());
-#if UNITY_ANDROID
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+            //仅在真机上调用;
             DetectSystemInfo();
 #endif
         }
